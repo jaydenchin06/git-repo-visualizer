@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from parser import read_file
 
 app = FastAPI()
 
@@ -12,4 +13,16 @@ def test():
 
 @app.get("/analyze")
 def analyze():
-    return {"analyzzingggg"} 
+    try:
+        file_content = read_file("test_sample.py")
+        return {
+            "status": "success",
+            "file": "test_sample.py",
+            "content": file_content,
+            "length": len(file_content)
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
