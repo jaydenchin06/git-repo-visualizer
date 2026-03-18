@@ -20,3 +20,17 @@ def read_file(file_path: str) -> str:
         raise FileNotFoundError(f"File not found: {file_path}")
     except IOError as e:
         raise IOError(f"Error reading file {file_path}: {str(e)}")
+
+
+if __name__ == "__main__":
+    test_file_path = "test_sample.py"
+    
+    try:
+        content = read_file(test_file_path)
+        print("File contents:")
+        print("-" * 50)
+        print(content)
+        print("-" * 50)
+        print(f"\nSuccessfully read {len(content)} characters from {test_file_path}")
+    except Exception as e:
+        print(f"Error: {e}")
