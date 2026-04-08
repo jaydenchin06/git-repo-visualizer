@@ -1,5 +1,5 @@
 import ast
-from typing import List
+from typing import List, Dict
 
 
 def get_top_level_functions(code: str) -> List[str]:
@@ -30,6 +30,46 @@ def get_top_level_functions(code: str) -> List[str]:
     
     # Return the list of function names
     return function_names
+
+
+def get_top_level_items(code: str) -> Dict[str, List[str]]:
+    """
+    Parses Python code and returns the names of top-level functions and classes.
+    
+    Args:
+        code: A string containing Python code
+        
+    Returns:
+        A dictionary with two keys:
+            - "functions": list of function names
+            - "classes": list of class names
+        
+    Raises:
+        SyntaxError: If the code has invalid Python syntax
+    """
+    # Parse the code string into an Abstract Syntax Tree (AST)
+    tree = ast.parse(code)
+    
+    # Create empty lists to store function and class names
+    function_names = []
+    class_names = []
+    
+    # Loop through each item in the tree's body (top-level statements)
+    for node in tree.body:
+        # Check if this node is a function definition
+        if isinstance(node, ast.FunctionDef):
+            # Add the function's name to our function list
+            function_names.append(node.name)
+        # Check if this node is a class definition
+        elif isinstance(node, ast.ClassDef):
+            # Add the class's name to our class list
+            class_names.append(node.name)
+    
+    # Return a dictionary with both lists
+    return {
+        "functions": function_names,
+        "classes": class_names
+    }
 
 
 def read_file(file_path: str) -> str:
