@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from backend.parser import read_file, get_top_level_functions, get_detailed_structure
+from backend.parser import read_file, get_detailed_structure
 
 app = FastAPI()
 

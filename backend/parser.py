@@ -2,40 +2,11 @@ import ast
 from typing import List, Dict
 
 
-def get_top_level_functions(code: str) -> List[str]:
-    """
-    Parses Python code and returns the names of all top-level functions.
-    
-    Args:
-        code: A string containing Python code
-        
-    Returns:
-        A list of function names (strings) that are defined at the top level
-        
-    Raises:
-        SyntaxError: If the code has invalid Python syntax
-    """
-    # Parse the code string into an Abstract Syntax Tree (AST)
-    tree = ast.parse(code)
-    
-    # Create an empty list to store function names
-    function_names = []
-    
-    # Loop through each item in the tree's body (top-level statements)
-    for node in tree.body:
-        # Check if this node is a function definition
-        if isinstance(node, ast.FunctionDef):
-            # Add the function's name to our list
-            function_names.append(node.name)
-    
-    # Return the list of function names
-    return function_names
-
 
 def get_detailed_structure(code: str) -> Dict:
     """
     Parses Python code and returns detailed information about functions and classes,
-    including their line numbers.
+    including their line numbers and source code.
     
     Args:
         code: A string containing Python code
@@ -44,13 +15,16 @@ def get_detailed_structure(code: str) -> Dict:
         A dictionary with two keys:
             - "functions": list of dictionaries with function details
             - "classes": list of dictionaries with class details
-        Each item contains: name, line_start, line_end
+        Each item contains: name, line_start, line_end, code
         
     Raises:
         SyntaxError: If the code has invalid Python syntax
     """
     # Parse the code string into an Abstract Syntax Tree (AST)
     tree = ast.parse(code)
+    
+    # Split the code into lines so we can extract specific line ranges
+    lines = code.split('\n')
     
     # Create empty lists to store detailed function and class information
     functions_list = []
@@ -60,11 +34,16 @@ def get_detailed_structure(code: str) -> Dict:
     for node in tree.body:
         # Check if this node is a function definition
         if isinstance(node, ast.FunctionDef):
+            # Extract the source code for this function
+            # Line numbers start at 1, but list indices start at 0
+            function_code = '\n'.join(lines[node.lineno - 1 : node.end_lineno])
+            
             # Create a dictionary with function details
             function_info = {
                 "name": node.name,
                 "line_start": node.lineno,
-                "line_end": node.end_lineno
+                "line_end": node.end_lineno,
+                "code": function_code
             }
             # Add to our functions list
             functions_list.append(function_info)
@@ -78,20 +57,28 @@ def get_detailed_structure(code: str) -> Dict:
             for item in node.body:
                 # Check if this item is a method (function inside a class)
                 if isinstance(item, ast.FunctionDef):
+                    # Extract the source code for this method
+                    method_code = '\n'.join(lines[item.lineno - 1 : item.end_lineno])
+                    
                     # Create a dictionary with method details
                     method_info = {
                         "name": item.name,
                         "line_start": item.lineno,
-                        "line_end": item.end_lineno
+                        "line_end": item.end_lineno,
+                        "code": method_code
                     }
                     # Add the method to our methods list
                     methods.append(method_info)
+            
+            # Extract the source code for this class
+            class_code = '\n'.join(lines[node.lineno - 1 : node.end_lineno])
             
             # Create a dictionary with class details, including methods
             class_info = {
                 "name": node.name,
                 "line_start": node.lineno,
                 "line_end": node.end_lineno,
+                "code": class_code,
                 "methods": methods
             }
             # Add to our classes list
