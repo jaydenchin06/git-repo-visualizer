@@ -1,4 +1,4 @@
-from parser import get_top_level_functions, get_top_level_items, read_file
+from parser import get_top_level_functions, get_detailed_structure, read_file
 
 
 def test_get_top_level_functions():
@@ -63,11 +63,11 @@ def goodbye():
         raise
 
 
-def test_get_top_level_items():
-    """Test the get_top_level_items function (functions AND classes)"""
+def test_get_detailed_structure():
+    """Test the get_detailed_structure function (functions AND classes with line numbers)"""
     
     print("\n" + "=" * 60)
-    print("TEST 3: Testing get_top_level_items() with sample code")
+    print("TEST 3: Testing get_detailed_structure() with sample code")
     print("=" * 60)
     
     sample_code = """
@@ -94,29 +94,32 @@ def goodbye():
     print("Sample code:")
     print(sample_code)
     
-    result = get_top_level_items(sample_code)
+    result = get_detailed_structure(sample_code)
     print(f"\nFound {len(result['functions'])} top-level functions:")
-    for func_name in result['functions']:
-        print(f"  - {func_name}")
+    for func in result['functions']:
+        print(f"  - {func['name']} (lines {func['line_start']}-{func['line_end']})")
     
     print(f"\nFound {len(result['classes'])} top-level classes:")
-    for class_name in result['classes']:
-        print(f"  - {class_name}")
+    for cls in result['classes']:
+        print(f"  - {cls['name']} (lines {cls['line_start']}-{cls['line_end']})")
     
-    # Verify the results
+    # Verify the results - just check names for now
+    function_names = [f['name'] for f in result['functions']]
+    class_names = [c['name'] for c in result['classes']]
+    
     expected_functions = ["hello", "add", "goodbye"]
     expected_classes = ["Person", "Calculator"]
     
-    assert result['functions'] == expected_functions, \
-        f"Expected functions {expected_functions}, but got {result['functions']}"
-    assert result['classes'] == expected_classes, \
-        f"Expected classes {expected_classes}, but got {result['classes']}"
+    assert function_names == expected_functions, \
+        f"Expected functions {expected_functions}, but got {function_names}"
+    assert class_names == expected_classes, \
+        f"Expected classes {expected_classes}, but got {class_names}"
     
     print("✓ Test 3 passed!")
     
     # Test 4: Test with test_sample.py file
     print("\n" + "=" * 60)
-    print("TEST 4: Testing get_top_level_items() with test_sample.py")
+    print("TEST 4: Testing get_detailed_structure() with test_sample.py")
     print("=" * 60)
     
     test_file_path = "test_sample.py"
@@ -125,23 +128,26 @@ def goodbye():
         content = read_file(test_file_path)
         print(f"\nRead {len(content)} characters from {test_file_path}")
         
-        result = get_top_level_items(content)
+        result = get_detailed_structure(content)
         print(f"\nFound {len(result['functions'])} top-level functions:")
-        for func_name in result['functions']:
-            print(f"  - {func_name}")
+        for func in result['functions']:
+            print(f"  - {func['name']} (lines {func['line_start']}-{func['line_end']})")
         
         print(f"\nFound {len(result['classes'])} top-level classes:")
-        for class_name in result['classes']:
-            print(f"  - {class_name}")
+        for cls in result['classes']:
+            print(f"  - {cls['name']} (lines {cls['line_start']}-{cls['line_end']})")
         
-        # Verify the results
+        # Verify the results - just check names for now
+        function_names = [f['name'] for f in result['functions']]
+        class_names = [c['name'] for c in result['classes']]
+        
         expected_functions = ["calculate_sum", "calculate_difference", "helper_function"]
         expected_classes = ["Calculator", "DataProcessor"]
         
-        assert result['functions'] == expected_functions, \
-            f"Expected functions {expected_functions}, but got {result['functions']}"
-        assert result['classes'] == expected_classes, \
-            f"Expected classes {expected_classes}, but got {result['classes']}"
+        assert function_names == expected_functions, \
+            f"Expected functions {expected_functions}, but got {function_names}"
+        assert class_names == expected_classes, \
+            f"Expected classes {expected_classes}, but got {class_names}"
         
         print("✓ Test 4 passed!")
         
@@ -152,7 +158,7 @@ def goodbye():
 
 if __name__ == "__main__":
     test_get_top_level_functions()
-    test_get_top_level_items()
+    test_get_detailed_structure()
     print("\n" + "=" * 60)
     print("All tests passed! ✓")
     print("=" * 60)

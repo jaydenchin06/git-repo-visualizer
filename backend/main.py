@@ -1,7 +1,13 @@
 from fastapi import FastAPI
-from backend.parser import read_file, get_top_level_functions, get_top_level_items
+from pydantic import BaseModel
+from backend.parser import read_file, get_top_level_functions, get_detailed_structure
 
 app = FastAPI()
+
+
+class CodeInput(BaseModel):
+    code: str
+
 
 @app.get("/")
 def home():
@@ -18,7 +24,7 @@ def analyze():
         file_content = read_file("backend/test_sample.py")
         
         # Parse the file to extract functions and classes
-        parsed_data = get_top_level_items(file_content)
+        parsed_data = get_detailed_structure(file_content)
         
         return {
             "status": "success",
@@ -31,6 +37,32 @@ def analyze():
                 "total_functions": len(parsed_data["functions"]),
                 "total_classes": len(parsed_data["classes"])
             }
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+@app.post("/parse")
+def parse_code(code_input: CodeInput):
+    try:
+        # Get the code from the request
+        code = code_input.code
+        
+        # Parse the code to extract functions and classes
+        parsed_data = get_detailed_structure(code)
+        
+        return {
+            "status": "success",
+            "parsed": parsed_data,
+            "code_length": len(code)
+        }
+    except SyntaxError as e:
+        return {
+            "status": "error",
+            "message": f"Invalid Python syntax: {str(e)}"
         }
     except Exception as e:
         return {

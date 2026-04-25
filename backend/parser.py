@@ -32,17 +32,19 @@ def get_top_level_functions(code: str) -> List[str]:
     return function_names
 
 
-def get_top_level_items(code: str) -> Dict[str, List[str]]:
+def get_detailed_structure(code: str) -> Dict:
     """
-    Parses Python code and returns the names of top-level functions and classes.
+    Parses Python code and returns detailed information about functions and classes,
+    including their line numbers.
     
     Args:
         code: A string containing Python code
         
     Returns:
         A dictionary with two keys:
-            - "functions": list of function names
-            - "classes": list of class names
+            - "functions": list of dictionaries with function details
+            - "classes": list of dictionaries with class details
+        Each item contains: name, line_start, line_end
         
     Raises:
         SyntaxError: If the code has invalid Python syntax
@@ -50,25 +52,55 @@ def get_top_level_items(code: str) -> Dict[str, List[str]]:
     # Parse the code string into an Abstract Syntax Tree (AST)
     tree = ast.parse(code)
     
-    # Create empty lists to store function and class names
-    function_names = []
-    class_names = []
+    # Create empty lists to store detailed function and class information
+    functions_list = []
+    classes_list = []
     
     # Loop through each item in the tree's body (top-level statements)
     for node in tree.body:
         # Check if this node is a function definition
         if isinstance(node, ast.FunctionDef):
-            # Add the function's name to our function list
-            function_names.append(node.name)
+            # Create a dictionary with function details
+            function_info = {
+                "name": node.name,
+                "line_start": node.lineno,
+                "line_end": node.end_lineno
+            }
+            # Add to our functions list
+            functions_list.append(function_info)
+            
         # Check if this node is a class definition
         elif isinstance(node, ast.ClassDef):
-            # Add the class's name to our class list
-            class_names.append(node.name)
+            # Create an empty list to store methods inside this class
+            methods = []
+            
+            # Loop through items inside the class's body
+            for item in node.body:
+                # Check if this item is a method (function inside a class)
+                if isinstance(item, ast.FunctionDef):
+                    # Create a dictionary with method details
+                    method_info = {
+                        "name": item.name,
+                        "line_start": item.lineno,
+                        "line_end": item.end_lineno
+                    }
+                    # Add the method to our methods list
+                    methods.append(method_info)
+            
+            # Create a dictionary with class details, including methods
+            class_info = {
+                "name": node.name,
+                "line_start": node.lineno,
+                "line_end": node.end_lineno,
+                "methods": methods
+            }
+            # Add to our classes list
+            classes_list.append(class_info)
     
     # Return a dictionary with both lists
     return {
-        "functions": function_names,
-        "classes": class_names
+        "functions": functions_list,
+        "classes": classes_list
     }
 
 
