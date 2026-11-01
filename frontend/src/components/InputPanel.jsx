@@ -32,6 +32,9 @@ export default function InputPanel({ loading, onAnalyzeRepo, onAnalyzeCode }) {
 
   function handleSubmit(event) {
     event.preventDefault()
+    if (!canSubmit) {
+      return
+    }
     if (mode === 'repo') {
       onAnalyzeRepo(url.trim())
     } else {
@@ -87,6 +90,12 @@ export default function InputPanel({ loading, onAnalyzeRepo, onAnalyzeCode }) {
             placeholder="Paste your Python code here"
             value={code}
             onChange={(e) => setCode(e.target.value)}
+            onKeyDown={(e) => {
+              // Ctrl+Enter (Cmd+Enter on Mac) visualizes without reaching for the mouse
+              if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                handleSubmit(e)
+              }
+            }}
             spellCheck={false}
             aria-label="Code to visualize"
           />

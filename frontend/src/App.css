@@ -299,6 +299,7 @@ textarea {
 
 .chevron {
   width: 20px;
+  align-self: stretch;
   flex: none;
   background: none;
   border: none;
