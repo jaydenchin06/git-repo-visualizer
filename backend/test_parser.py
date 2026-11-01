@@ -1,4 +1,6 @@
-from parser import get_detailed_structure, read_file
+import os
+
+from backend.parser import get_detailed_structure, read_file
 
 
 def test_get_detailed_structure():
@@ -53,14 +55,14 @@ def goodbye():
     assert class_names == expected_classes, \
         f"Expected classes {expected_classes}, but got {class_names}"
     
-    print("✓ Test 3 passed!")
+    print("✓ Test 1 passed!")
     
     # Test 2: Test with test_sample.py file
     print("\n" + "=" * 60)
     print("TEST 2: Testing get_detailed_structure() with test_sample.py")
     print("=" * 60)
     
-    test_file_path = "test_sample.py"
+    test_file_path = os.path.join(os.path.dirname(__file__), "test_sample.py")
     
     try:
         content = read_file(test_file_path)
