@@ -58,3 +58,6 @@ logs/
 
 # OS files
 Thumbs.db
+
+# Frontend
+node_modules/
