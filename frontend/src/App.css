@@ -106,6 +106,49 @@ textarea {
   color: var(--text-muted);
 }
 
+/* ---- Full-window mode (once a repo or code is loaded) ---- */
+.app-full {
+  max-width: none;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px;
+}
+
+.app-full .app-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex: none;
+}
+
+.app-full .app-header h1 {
+  font-size: 1.1rem;
+  white-space: nowrap;
+}
+
+.source {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 13px;
+}
+
+.small-button {
+  padding: 4px 12px;
+  font-size: 14px;
+}
+
+body.resizing {
+  cursor: col-resize;
+  user-select: none;
+}
+
 /* ---- Input panel ---- */
 .input-panel {
   background: var(--surface);
@@ -224,12 +267,12 @@ textarea {
   margin: 0 0 16px;
 }
 
-/* ---- Two-column workspace ---- */
+/* ---- Two-column workspace: tree | drag handle | details ---- */
 .workspace {
+  flex: 1;
+  min-height: 0;
   display: grid;
-  grid-template-columns: minmax(240px, 340px) 1fr;
-  gap: 16px;
-  align-items: start;
+  grid-template-columns: var(--sidebar-width, 300px) 12px 1fr;
 }
 
 .sidebar,
@@ -238,29 +281,77 @@ textarea {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   min-width: 0;
+  min-height: 0;
 }
 
+/* Each side scrolls on its own, so the tree stays put while you read code */
 .sidebar {
-  position: sticky;
-  top: 16px;
-  max-height: calc(100vh - 32px);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
+.main-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.resize-handle {
+  cursor: col-resize;
+  position: relative;
+  touch-action: none;
+}
+
+/* Thin line in the middle of the handle that lights up when you can drag it */
+.resize-handle::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 5px;
+  width: 2px;
+  border-radius: 1px;
+  background: transparent;
+}
+
+.resize-handle:hover::after,
+.resize-handle:focus-visible::after,
+body.resizing .resize-handle::after {
+  background: var(--accent);
+}
+
+.resize-handle:focus-visible {
+  outline: none;
+}
+
+/* On phones there's no room side by side, so stack them and scroll the page */
 @media (max-width: 760px) {
+  .app-full {
+    height: auto;
+  }
+
   .workspace {
     grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .resize-handle {
+    display: none;
   }
 
   .sidebar {
-    position: static;
     max-height: 50vh;
+  }
+
+  .main-panel {
+    overflow: visible;
   }
 }
 
 /* ---- Tree ---- */
 .tree-view {
+  flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -370,8 +461,23 @@ textarea {
 }
 
 /* ---- Details panel ---- */
+/* The title and buttons stay put and the code box takes up the rest of the
+   panel, scrolling inside itself like an editor */
 .details {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
   padding: 16px;
+}
+
+.details > * {
+  flex: none;
+}
+
+.details > .code-view {
+  flex: 1 0 240px;
 }
 
 .empty-state {
@@ -466,7 +572,6 @@ textarea {
   border: 1px solid var(--border);
   border-radius: 6px;
   overflow: auto;
-  max-height: 70vh;
 }
 
 .code-view pre {
@@ -516,3 +621,15 @@ textarea {
 .hljs-attr,
 .hljs-attribute,
 .hljs-variable.language_ { color: var(--tok-builtin); }
+
+/* Phones: let the details panel grow with the page (kept last so it wins over the rules above) */
+@media (max-width: 760px) {
+  .details {
+    overflow: visible;
+  }
+
+  .details > .code-view {
+    flex: none;
+    max-height: 70vh;
+  }
+}

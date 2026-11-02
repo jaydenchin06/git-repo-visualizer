@@ -1,8 +1,19 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { analyzeCode, analyzeRepo, explainCode } from './api.js'
 import InputPanel from './components/InputPanel.jsx'
 import TreeView from './components/TreeView.jsx'
 import DetailsPanel from './components/DetailsPanel.jsx'
+import ResizeHandle, { DEFAULT_WIDTH, clampWidth } from './components/ResizeHandle.jsx'
+
+// Remembers how wide you made the tree last time (localStorage can be blocked, so it's optional)
+function loadSidebarWidth() {
+  try {
+    const saved = Number(localStorage.getItem('sidebarWidth'))
+    return saved ? clampWidth(saved) : DEFAULT_WIDTH
+  } catch {
+    return DEFAULT_WIDTH
+  }
+}
 
 // Maps each file path to its language, so classes/methods know what language they're in
 function collectLanguages(node, languages = {}) {
@@ -20,10 +31,22 @@ export default function App() {
   const [selected, setSelected] = useState(null)
   // Explanations by node id: { loading, text, error }
   const [explanations, setExplanations] = useState({})
+  // What's loaded (shown in the top bar), and whether the input box is open
+  const [source, setSource] = useState('')
+  const [showInput, setShowInput] = useState(true)
+  const [sidebarWidth, setSidebarWidth] = useState(loadSidebarWidth)
 
   const languages = useMemo(() => (result ? collectLanguages(result.tree) : {}), [result])
 
-  async function load(request) {
+  useEffect(() => {
+    try {
+      localStorage.setItem('sidebarWidth', sidebarWidth)
+    } catch {
+      // Not saving the width is fine
+    }
+  }, [sidebarWidth])
+
+  async function load(request, label) {
     setLoading(true)
     setError(null)
     try {
@@ -31,6 +54,8 @@ export default function App() {
       setResult(data)
       setSelected(data.tree)
       setExplanations({})
+      setSource(label)
+      setShowInput(false)
     } catch (e) {
       setError(e.message)
     } finally {
@@ -49,25 +74,39 @@ export default function App() {
   }
 
   return (
-    <div className="app">
+    // Once something is loaded the app fills the whole window, like an editor
+    <div className={result ? 'app app-full' : 'app'}>
       <header className="app-header">
         <h1>Git Repo Visualizer</h1>
-        <p className="muted">See any codebase as a tree of folders, files, classes and methods.</p>
+        {result ? (
+          <>
+            <span className="source" title={source}>{source}</span>
+            <button type="button" className="secondary-button small-button" onClick={() => setShowInput(!showInput)}>
+              {showInput ? 'Close' : 'Open another'}
+            </button>
+          </>
+        ) : (
+          <p className="muted">See any codebase as a tree of folders, files, classes and methods.</p>
+        )}
       </header>
 
-      <InputPanel
-        loading={loading}
-        onAnalyzeRepo={(url) => load(() => analyzeRepo(url))}
-        onAnalyzeCode={(code, filename) => load(() => analyzeCode(code, filename))}
-      />
+      {/* Hidden instead of removed so whatever you typed is still there when you reopen it */}
+      <div hidden={!showInput}>
+        <InputPanel
+          loading={loading}
+          onAnalyzeRepo={(url) => load(() => analyzeRepo(url), url.replace(/^https?:\/\/(www\.)?/, ''))}
+          onAnalyzeCode={(code, filename) => load(() => analyzeCode(code, filename), `Pasted code · ${filename}`)}
+        />
+      </div>
 
       {error && <p className="error-banner" role="alert">{error}</p>}
 
       {result && (
-        <main className="workspace">
+        <main className="workspace" style={{ '--sidebar-width': `${sidebarWidth}px` }}>
           <aside className="sidebar">
             <TreeView tree={result.tree} selectedId={selected?.id} onSelect={setSelected} />
           </aside>
+          <ResizeHandle width={sidebarWidth} onChange={setSidebarWidth} />
           <section className="main-panel">
             <DetailsPanel
               // Reset "Hide code" etc. whenever a different node is picked
