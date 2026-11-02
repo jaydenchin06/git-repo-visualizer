@@ -234,6 +234,18 @@ body.resizing {
   font-size: 13px;
 }
 
+.filename-hint {
+  flex: 1;
+  align-self: center;
+  font-size: 13px;
+}
+
+@media (max-width: 760px) {
+  .filename-hint {
+    display: none;
+  }
+}
+
 .primary-button,
 .secondary-button {
   border-radius: 6px;

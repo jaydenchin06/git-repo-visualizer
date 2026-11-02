@@ -2,6 +2,12 @@ import ast
 import os
 from typing import List, Dict, Optional
 
+try:
+    from backend.languages import get_language_info, parse_with_tree_sitter
+except ImportError:
+    # When running this file directly (python backend/parser.py) for the demo at the bottom
+    from languages import get_language_info, parse_with_tree_sitter
+
 
 
 def get_detailed_structure(code: str) -> Dict:
@@ -162,20 +168,17 @@ def _python_symbols(body: list, inside_class: bool) -> List[Dict]:
     return symbols
 
 
-# Maps a file extension to the language name and the function that parses it.
-# To support a new language, write a function that takes the code as a string and
-# returns a list of symbols in the same shape as parse_python, then add it here.
+# Maps a file extension to the language name and a hand-written parser for it.
+# Python uses its own built-in parser, which gives exact syntax error messages.
+# Most other languages are parsed with tree-sitter instead (see languages.py).
 PARSERS = {
     ".py": ("python", parse_python),
 }
 
-# Languages we can recognise (for display and for the AI) but can't parse yet
+# Files we can recognise (for display and highlighting) but that have no classes or functions
 LANGUAGE_NAMES = {
-    ".js": "javascript", ".jsx": "javascript", ".ts": "typescript", ".tsx": "typescript",
-    ".java": "java", ".c": "c", ".h": "c", ".cpp": "cpp", ".cs": "csharp",
-    ".go": "go", ".rs": "rust", ".rb": "ruby", ".php": "php", ".swift": "swift",
-    ".kt": "kotlin", ".html": "html", ".css": "css", ".json": "json",
-    ".md": "markdown", ".yml": "yaml", ".yaml": "yaml", ".sh": "bash", ".sql": "sql",
+    ".html": "html", ".css": "css", ".scss": "scss", ".json": "json", ".md": "markdown",
+    ".yml": "yaml", ".yaml": "yaml", ".xml": "xml", ".sh": "bash", ".sql": "sql",
 }
 
 
@@ -184,6 +187,8 @@ def get_language(filename: str) -> Optional[str]:
     extension = os.path.splitext(filename)[1].lower()
     if extension in PARSERS:
         return PARSERS[extension][0]
+    if get_language_info(extension):
+        return get_language_info(extension)[0]
     return LANGUAGE_NAMES.get(extension)
 
 
@@ -201,7 +206,11 @@ def parse_code(code: str, filename: str) -> Dict:
     """
     extension = os.path.splitext(filename)[1].lower()
     if extension not in PARSERS:
-        return {"language": get_language(filename), "symbols": [], "error": None}
+        info = get_language_info(extension)
+        if info is None:
+            return {"language": get_language(filename), "symbols": [], "error": None}
+        language, grammar = info
+        return {"language": language, **parse_with_tree_sitter(code, grammar)}
 
     language, parse = PARSERS[extension]
     try:

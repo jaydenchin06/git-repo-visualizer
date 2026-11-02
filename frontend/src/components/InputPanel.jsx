@@ -87,7 +87,7 @@ export default function InputPanel({ loading, onAnalyzeRepo, onAnalyzeCode }) {
         <div className="paste-area">
           <textarea
             className="code-input"
-            placeholder="Paste your Python code here"
+            placeholder="Paste your code here (Python, JavaScript, Java, C++, Go, Rust...)"
             value={code}
             onChange={(e) => setCode(e.target.value)}
             onKeyDown={(e) => {
@@ -106,7 +106,9 @@ export default function InputPanel({ loading, onAnalyzeRepo, onAnalyzeCode }) {
               value={filename}
               onChange={(e) => setFilename(e.target.value)}
               aria-label="File name"
+              title="The file extension (like .js or .java) tells it which language the code is"
             />
+            <span className="muted filename-hint">The extension picks the language</span>
             <button type="submit" className="primary-button" disabled={!canSubmit}>
               {loading ? 'Loading…' : 'Visualize'}
             </button>

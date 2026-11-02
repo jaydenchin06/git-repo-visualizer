@@ -1,5 +1,9 @@
 import { useMemo } from 'react'
 import hljs from 'highlight.js/lib/common'
+import scala from 'highlight.js/lib/languages/scala'
+
+// The common bundle covers most languages the backend parses, but not Scala
+hljs.registerLanguage('scala', scala)
 
 // Highlighting very large files makes the page freeze, so skip it past this size
 const MAX_HIGHLIGHT_CHARS = 200000

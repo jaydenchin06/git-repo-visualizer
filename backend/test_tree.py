@@ -32,7 +32,7 @@ class Outer:
 
 
 def test_parse_code_handles_unknown_languages_and_errors():
-    assert parse_code("let x = 1", "app.js") == {"language": "javascript", "symbols": [], "error": None}
+    assert parse_code("# Hi", "notes.md") == {"language": "markdown", "symbols": [], "error": None}
     assert parse_code("hello", "notes") == {"language": None, "symbols": [], "error": None}
 
     broken = parse_code("def oops(:\n", "broken.py")
